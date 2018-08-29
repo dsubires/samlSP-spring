@@ -21,11 +21,11 @@ $ mvn package
 
 You can start the application using command:
 
-mvn tomcat7:run
+$ mvn tomcat7:run
 
 Same can be achieved using gradle with:
 
-gradlew tomcatRun
+$ gradlew tomcatRun
 
 After startup the Spring SAML sample application will be available at http://localhost:8080/spring-security-saml2-sample
 
