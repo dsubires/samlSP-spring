@@ -24,7 +24,7 @@
         <security:form-login login-processing-url="/saml/web/login" login-page="/saml/web/metadata/login" default-target-url="/saml/web/metadata"/>
         <security:intercept-url pattern="/saml/web/metadata/login" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
         <security:intercept-url pattern="/saml/web/**" access="ROLE_ADMIN"/>
-        <!--<security:custom-filter before="FIRST" ref="metadataGeneratorFilter"/>-->
+        <security:custom-filter before="FIRST" ref="metadataGeneratorFilter"/>
     </security:http>
 
     <!-- Secured pages with SAML as entry point -->
@@ -77,7 +77,7 @@
         <!-- Register authentication manager for administration UI -->
         <security:authentication-provider>
             <security:user-service id="adminInterfaceService">
-                <security:user name="admin" password="admin000" authorities="ROLE_ADMIN"/>
+                <security:user name="admin" password="admin" authorities="ROLE_ADMIN"/>
             </security:user-service>
         </security:authentication-provider>
     </security:authentication-manager>
@@ -116,55 +116,31 @@
         <property name="idpSelectionPath" value="/WEB-INF/security/idpSelection.jsp"/>
     </bean>
 
-   
-   
-     <bean id="metadata" class="org.springframework.security.saml.metadata.CachingMetadataManager">
+    <!-- Filter automatically generates default SP metadata -->
+    <bean id="metadataGeneratorFilter" class="org.springframework.security.saml.metadata.MetadataGeneratorFilter">
         <constructor-arg>
-            <list>
-                <!-- Example of classpath metadata with Extended Metadata -->
-                <bean class="org.springframework.security.saml.metadata.ExtendedMetadataDelegate">
-                    <constructor-arg>
-                        <bean class="org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider">
-                            <constructor-arg>
-                                <bean class="java.util.Timer"/>
-                            </constructor-arg>
-                            <constructor-arg>
-                                <bean class="org.opensaml.util.resource.ClasspathResource">
-                                    <constructor-arg value="/metadata/37.48.106.66_8080_sp.xml"/>
-                                </bean>
-                            </constructor-arg>
-                            <property name="parserPool" ref="parserPool"/>
-                        </bean>
-                    </constructor-arg>
-                    <constructor-arg>
-                        <bean class="org.springframework.security.saml.metadata.ExtendedMetadata">
-							<property name="local" value="true"/>
-							<property name="securityProfile" value="metaiop"/>
-							<property name="sslSecurityProfile" value="pkix"/>
-							<property name="sslHostnameVerification" value="default"/>
-							<property name="signMetadata" value="true"/>
-							<property name="signingKey" value="apollo"/>
-							<property name="encryptionKey" value="apollo"/>
-							<property name="tlsKey" value="apollo"/>
-							<property name="signingAlgorithm" value="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
-							<property name="requireArtifactResolveSigned" value="false"/>
-							<property name="requireLogoutRequestSigned" value="false"/>
-							<property name="requireLogoutResponseSigned" value="false"/>
-							<property name="idpDiscoveryEnabled" value="false"/>
-							<property name="ecpEnabled" value="true" />
-                        </bean>
-                    </constructor-arg>
-                </bean>
-            </list>
+            <bean class="org.springframework.security.saml.metadata.MetadataGenerator">
+                <property name="extendedMetadata">
+                    <bean class="org.springframework.security.saml.metadata.ExtendedMetadata">
+                            <property name="local" value="true"/>
+                            <property name="securityProfile" value="metaiop"/>
+                            <property name="sslSecurityProfile" value="pkix"/>
+                            <property name="sslHostnameVerification" value="default"/>
+                            <property name="signMetadata" value="false"/>
+                            <property name="signingKey" value="apollo"/>
+                            <property name="encryptionKey" value="apollo"/>
+                            <property name="requireArtifactResolveSigned" value="true"/>
+                            <property name="requireLogoutRequestSigned" value="true"/>
+                            <property name="requireLogoutResponseSigned" value="false"/>
+                            <property name="idpDiscoveryEnabled" value="true"/>
+                            <property name="ecpEnabled" value="true" />
+                            <!--<property name="idpDiscoveryURL" value="${host.name}/sp/saml/discovery"/>
+                            <property name="idpDiscoveryResponseURL" value="${host.name}/sp/saml/login?disco=true"/>-->
+                    </bean>
+                </property>
+            </bean>
         </constructor-arg>
-        <!-- OPTIONAL used when one of the metadata files contains information about this service provider -->
-        <!-- <property name="hostedSPName" value=""/> -->
-        <!-- OPTIONAL property: can tell the system which IDP should be used for authenticating user by default. -->
-        <!-- <property name="defaultIDP" value="http://localhost:8080/opensso"/> -->
     </bean>
- 
-
-
 
     <!-- The filter is waiting for connections on URL suffixed with filterSuffix and presents SP metadata there -->
     <bean id="metadataDisplayFilter" class="org.springframework.security.saml.metadata.MetadataDisplayFilter"/>
@@ -177,21 +153,57 @@
     -->
 
     <!-- IDP Metadata configuration - paths to metadata of IDPs in circle of trust is here -->
-<bean id="metadata" class="org.springframework.security.saml.metadata.CachingMetadataManager">
-	<constructor-arg>
-		<list>
-			<bean class="org.opensaml.saml2.metadata.provider.HTTPMetadataProvider">
-				<constructor-arg>
-					<value type="java.lang.String">https://idpiot.cafeexpresso.rnp.br/simplesaml/saml2/idp/metadata.php</value>
-				</constructor-arg>
-				<constructor-arg>
-					<value type="int">15000</value>
-				</constructor-arg>
-				<property name="parserPool" ref="parserPool"/>
-			</bean>
-		</list>
-	</constructor-arg>
-</bean>
+    <bean id="metadata" class="org.springframework.security.saml.metadata.CachingMetadataManager">
+        <constructor-arg>
+            <list>
+                <!-- Example of classpath metadata with Extended Metadata -->
+                <bean class="org.springframework.security.saml.metadata.ExtendedMetadataDelegate">
+                    <constructor-arg>
+                        <bean class="org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider">
+                            <constructor-arg>
+                                <bean class="java.util.Timer"/>
+                            </constructor-arg>
+                            <constructor-arg>
+                                <bean class="org.opensaml.util.resource.ClasspathResource">
+                                    <constructor-arg value="/metadata/idp.xml"/>
+                                </bean>
+                            </constructor-arg>
+                            <property name="parserPool" ref="parserPool"/>
+                        </bean>
+                    </constructor-arg>
+                    <constructor-arg>
+                        <bean class="org.springframework.security.saml.metadata.ExtendedMetadata">
+                        </bean>
+                    </constructor-arg>
+                </bean>
+                <!-- Example of HTTP metadata without Extended Metadata -->
+                <bean class="org.opensaml.saml2.metadata.provider.HTTPMetadataProvider">
+                    <!-- URL containing the metadata -->
+                    <constructor-arg>
+                        <value type="java.lang.String">https://idpiot.cafeexpresso.rnp.br/simplesaml/saml2/idp/metadata.php</value>
+                    </constructor-arg>
+                    <!-- Timeout for metadata loading in ms -->
+                    <constructor-arg>
+                        <value type="int">15000</value>
+                    </constructor-arg>
+                    <property name="parserPool" ref="parserPool"/>
+                </bean>
+                <!-- Example of file system metadata without Extended Metadata -->
+                <!--
+                <bean class="org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider">
+                    <constructor-arg>
+                        <value type="java.io.File">/usr/local/metadata/idp.xml</value>
+                    </constructor-arg>
+                    <property name="parserPool" ref="parserPool"/>
+                </bean>
+                -->
+            </list>
+        </constructor-arg>
+        <!-- OPTIONAL used when one of the metadata files contains information about this service provider -->
+        <!-- <property name="hostedSPName" value=""/> -->
+        <!-- OPTIONAL property: can tell the system which IDP should be used for authenticating user by default. -->
+        <!-- <property name="defaultIDP" value="http://localhost:8080/opensso"/> -->
+    </bean>
 
     <!-- SAML Authentication Provider responsible for validating of received SAML messages -->
     <bean id="samlAuthenticationProvider" class="org.springframework.security.saml.SAMLAuthenticationProvider">
@@ -252,10 +264,10 @@
     </bean>
 
     <!-- SAML 2.0 WebSSO Assertion Consumer -->
-    <!--<bean id="webSSOprofileConsumer" class="org.springframework.security.saml.websso.WebSSOProfileConsumerImpl"/>-->
-	<bean id="webSSOprofileConsumer" class="org.springframework.security.saml.websso.WebSSOProfileConsumerImpl">
-	 <property name="responseSkew" value="60000"/>
-	</bean>
+    <bean id="webSSOprofileConsumer" class="org.springframework.security.saml.websso.WebSSOProfileConsumerImpl">
+     <property name="responseSkew" value="20000"/> <!-- 5,5 hours-->
+    </bean>
+
     <!-- SAML 2.0 Holder-of-Key WebSSO Assertion Consumer -->
     <bean id="hokWebSSOprofileConsumer" class="org.springframework.security.saml.websso.WebSSOProfileConsumerHoKImpl"/>
 
@@ -269,10 +281,9 @@
     <bean id="ecpprofile" class="org.springframework.security.saml.websso.WebSSOProfileECPImpl"/>
 
     <!-- SAML 2.0 Logout Profile -->
-    <!--<bean id="logoutprofile" class="org.springframework.security.saml.websso.SingleLogoutProfileImpl"/>-->
-	<bean id="logoutprofile" class="org.springframework.security.saml.websso.SingleLogoutProfileImpl">
-	 <property name="responseSkew" value="60000"/>
-	</bean>
+    <bean id="logoutprofile" class="org.springframework.security.saml.websso.SingleLogoutProfileImpl">
+    <property name="responseSkew" value="20000"/> <!-- 5,5 hours -->
+    </bean>
 
     <!-- Bindings, encoders and decoders used for creating and parsing messages -->
     <bean id="postBinding" class="org.springframework.security.saml.processor.HTTPPostBinding">

@@ -24,7 +24,7 @@
                             pageContext.setAttribute("idp", idps);
                         %>
                         <p>
-                        <form action="<c:url value="${requestScope.idpDiscoReturnURL}"/>" method="get">
+                        <form action="<c:url value="${requestScope.idpDiscoReturnURL}"/>" method="GET">
                             <c:forEach var="idpItem" items="${idp}">
                                 <input type="radio" name="${requestScope.idpDiscoReturnParam}" id="idp_<c:out value="${idpItem}"/>" value="<c:out value="${idpItem}"/>"/>
                                 <label for="idp_<c:out value="${idpItem}"/>"><c:out value="${idpItem}"/></label>
