@@ -7,7 +7,7 @@ The metadata of the SP are stored in src/main/resources/metadata/samlecp_sp.xml 
 
 This project can be built from the command line using the maven application or by eclipse and the plugin for maven (m2e) and deployed by tomcat
 
-#Compilation
+# Compilation
 
 When building from sources compile whole project and install artifacts into your local Maven repository using:
 
@@ -17,7 +17,7 @@ When using the release zip compile the sample application available in the sampl
 
 $ mvn package
 
-#Deployment
+# Deployment
 
 You can start the application using command:
 
